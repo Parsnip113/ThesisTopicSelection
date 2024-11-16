@@ -6,7 +6,7 @@
 
 ## 项目展示
 
-[Screencast from 2024-11-16 17-19-18.webm](https://github.com/user-attachments/assets/e8ba7471-04f1-4bd9-967f-4425d20e0c22)
+[Screencast from 2024-11-16 18-34-32.webm](https://github.com/user-attachments/assets/caa924ea-9f7b-462b-ac20-53b73d93bb45)
 
 ## 功能概述
 
