@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>🐔🧱毕业设计选题系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .highlight-project {
+            animation: highlight 2s ease-in-out;
+        }
+
+        @keyframes highlight {
+            0%, 100% {
+                background-color: white;
+            }
+            50% {
+                background-color: rgb(254 249 195);
+            }
+        }
+
+        .recommendation-results {
+            min-height: 400px; /* 确保有足够的空间 */
+        }
+
+        .qrcode {
+            width: 80px;
+            height: 80px;
+        }
+
+        .qrcode img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #image-content {
+            width: 800px;
+            background: white;
+        }
+
+        #image-content .recommendation-results {
+            min-height: 600px;
+        }
+
+        #qrcode-container {
+            display: inline-block;
+        }
+
+        #qrcode-container img {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        @font-face {
+            font-family: 'Huiwen-mincho';
+            src: url('fonts/Huiwen-mincho-subset.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        .share-content {
+            font-family: 'Huiwen-mincho', serif;
+            min-height: 800px;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            height: 24px;
+            padding: 0 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .tag-blue {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+        }
+
+        .tag-green {
+            background-color: #ECFDF5;
+            color: #065F46;
+        }
+
+        .tag-purple {
+            background-color: #F5F3FF;
+            color: #5B21B6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50" x-data="projectsData()">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- 桌面端布局 -->
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-900 whitespace-nowrap">🐔🧱毕业设计选题系统</span>
+                </div>
+                <!-- 默认显示完整导航 -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            x-model="searchQuery"
+                            placeholder="搜索课题..."
+                            class="w-64 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button
+                        @click="showRecommendModal = true"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-magic"></i>
+                        <span>帮我选</span>
+                    </button>
+                    <button
+                        @click="pickRandom"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-dice"></i>
+                        <span>手气不错</span>
+                    </button>
+                    <button
+                        @click="loveRecommendation"
+                        class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-heart"></i>
+                        <span>爱Ta选这个</span>
+                    </button>
+                    <button
+                        @click="hateRecommendation"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-heart-broken"></i>
+                        <span>恨Ta选这个</span>
+                    </button>
+                    <button
+                        @click="openNameModal()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-magic"></i>
+                        <span>姓名测算</span>
+                    </button>
+                </div>
+
+                <!-- 移动端菜单按钮 -->
+                <div class="flex md:hidden items-center">
+                    <button
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+                    >
+                        <i class="fas" :class="mobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 移动端展开菜单 -->
+            <div
+                x-show="mobileMenuOpen"
+                class="md:hidden"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-1"
+            >
+                <div class="pt-2 pb-4 space-y-2">
+                    <!-- 移动端搜索框 -->
+                    <div class="px-2">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                x-model="searchQuery"
+                                placeholder="搜索课题..."
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- 移动端按钮组 -->
+                    <div class="grid gap-2 px-2">
+                        <button
+                            @click="showRecommendModal = true; mobileMenuOpen = false"
+                            class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-magic"></i>
+                            <span>帮我选</span>
+                        </button>
+                        <button
+                            @click="pickRandom(); mobileMenuOpen = false"
+                            class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-dice"></i>
+                            <span>手气不错</span>
+                        </button>
+                        <button
+                            @click="loveRecommendation(); mobileMenuOpen = false"
+                            class="w-full px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-heart"></i>
+                            <span>爱Ta选这个</span>
+                        </button>
+                        <button
+                            @click="hateRecommendation(); mobileMenuOpen = false"
+                            class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-heart-broken"></i>
+                            <span>恨Ta选这个</span>
+                        </button>
+                        <button
+                            @click="openNameModal(); mobileMenuOpen = false"
+                            class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-magic"></i>
+                            <span>姓名测算</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 筛选器 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">学院</label>
+                    <select
+                        x-model="filters.college"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">全部学院</option>
+                        <template x-for="college in colleges" :key="college">
+                            <option x-text="college"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">题目类型</label>
+                    <select
+                        x-model="filters.type"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">全部类型</option>
+                        <template x-for="type in types" :key="type">
+                            <option x-text="type"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">来源</label>
+                    <select
+                        x-model="filters.source"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">全部来源</option>
+                        <template x-for="source in sources" :key="source">
+                            <option x-text="source"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 项目列表 -->
+        <div class="space-y-4">
+            <template x-for="project in filteredProjects" :key="project.基本信息.课题编号">
+                <div
+                    :id="'project-' + project.基本信息.课题编号"
+                    class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                    :class="{'highlight-project': project.基本信息.课题编号 === highlightedProject}"
+                >
+                    <div class="p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900" x-text="project.基本信息.名称"></h3>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="project.基本信息.学院名称"></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="project.基本信息.题目类型名称"></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" x-text="project.基本信息.题目来源名称"></span>
+                                </div>
+                                <div class="mt-3 text-sm text-gray-500">
+                                    <span class="font-medium">指导教师：</span>
+                                    <span x-text="project.基本信息.姓名"></span>
+                                    <span class="mx-2">|</span>
+                                    <span class="font-medium">教研室：</span>
+                                    <span x-text="project.基本信息.教研室 || '暂无'"></span>
+                                </div>
+                            </div>
+                            <button
+                                @click="toggleDetails(project.基本信息.课题编号)"
+                                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                <span x-text="expandedProject === project.基本信息.课题编号 ? '收起' : '详情'"></span>
+                            </button>
+                        </div>
+
+                        <!-- 详细信息 -->
+                        <div
+                            x-show="expandedProject === project.基本信息.课题编号"
+                            x-collapse
+                            class="mt-4 pt-4 border-t border-gray-200"
+                        >
+                            <div class="prose max-w-none">
+                                <h4 class="text-base font-medium text-gray-900 mb-2">课题详情</h4>
+                                <div class="text-sm text-gray-600 whitespace-pre-wrap" x-text="project.详细信息?.column002 || '暂无详细信息'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </main>
+
+    <!-- 在主模板中添加 Toast 组件 -->
+    <div
+    x-data="{
+        toasts: [],
+        addToast(message, type = 'info') {
+            const id = Date.now();
+            this.toasts.push({ id, message, type });
+            setTimeout(() => {
+                this.toasts = this.toasts.filter(t => t.id !== id);
+            }, 3000);
+        }
+    }"
+    @show-toast.window="addToast($event.detail.message, $event.detail.type)"
+    class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] pointer-events-none flex flex-col items-center"
+    >
+        <template x-for="toast in toasts" :key="toast.id">
+            <div
+                x-show="true"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-2"
+                :class="{
+                    'bg-green-500': toast.type === 'success',
+                    'bg-red-500': toast.type === 'error',
+                    'bg-blue-500': toast.type === 'info',
+                    'bg-yellow-500': toast.type === 'warning'
+                }"
+                class="mb-2 px-6 py-3 text-white rounded-lg shadow-lg flex items-center min-w-[200px] justify-center font-medium"
+            >
+                <!-- 添加图标 -->
+                <i :class="{
+                    'fas fa-check-circle': toast.type === 'success',
+                    'fas fa-exclamation-circle': toast.type === 'error',
+                    'fas fa-info-circle': toast.type === 'info',
+                    'fas fa-exclamation-triangle': toast.type === 'warning'
+                }" class="mr-2"></i>
+                <span x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
+
+    <!-- 推荐模态框 -->
+    <div
+    x-show="showRecommendModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    @click.self="showRecommendModal = false"
+    >
+        <div class="bg-white rounded-xl shadow-xl p-8 w-full max-w-lg mx-4">
+            <h3 class="text-xl font-semibold mb-6 text-gray-800">让我们来帮你选择合适的课题</h3>
+
+            <!-- 兴趣方向 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">你感兴趣的方向</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <template x-for="(interest, index) in interests" :key="index">
+                        <label class="relative flex items-center p-3 rounded-lg border border-gray-200 hover:border-blue-500 cursor-pointer transition-colors">
+                            <input
+                                type="checkbox"
+                                x-model="selectedInterests"
+                                :value="interest"
+                                class="rounded text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                            >
+                            <span class="ml-3 text-gray-700" x-text="interest"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 难度偏好 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">期望难度</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <template x-for="option in [
+                        {value: 'easy', label: '相对简单', icon: 'fa-seedling'},
+                        {value: 'medium', label: '中等难度', icon: 'fa-tree'},
+                        {value: 'hard', label: '具有挑战', icon: 'fa-mountain'}
+                    ]">
+                        <label
+                            class="relative flex flex-col items-center p-4 rounded-lg border cursor-pointer transition-all"
+                            :class="difficultyPreference === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-500'"
+                        >
+                            <input
+                                type="radio"
+                                :value="option.value"
+                                x-model="difficultyPreference"
+                                class="absolute opacity-0"
+                            >
+                            <i :class="'fas ' + option.icon + ' text-xl mb-2'"
+                            :class="difficultyPreference === option.value ? 'text-blue-500' : 'text-gray-400'"></i>
+                            <span class="text-sm text-center" x-text="option.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 项目类型偏好 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">项目类型偏好</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <template x-for="option in [
+                        {value: 'research', label: '偏研究型', icon: 'fa-flask'},
+                        {value: 'engineering', label: '偏工程实现', icon: 'fa-code'},
+                        {value: 'both', label: '都可以', icon: 'fa-balance-scale'}
+                    ]">
+                        <label
+                            class="relative flex flex-col items-center p-4 rounded-lg border cursor-pointer transition-all"
+                            :class="typePreference === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-500'"
+                        >
+                            <input
+                                type="radio"
+                                :value="option.value"
+                                x-model="typePreference"
+                                class="absolute opacity-0"
+                            >
+                            <i :class="'fas ' + option.icon + ' text-xl mb-2'"
+                            :class="typePreference === option.value ? 'text-blue-500' : 'text-gray-400'"></i>
+                            <span class="text-sm text-center" x-text="option.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 按钮组 -->
+            <div class="flex justify-end space-x-3 mt-8">
+                <button
+                    @click="showRecommendModal = false"
+                    class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                    取消
+                </button>
+                <button
+                    @click="getRecommendations"
+                    class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    获取推荐
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加姓名测算模态框 -->
+    <div
+    x-show="showNameModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    @click.self="showNameModal = false"
+    >
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">玄学选题测算</h3>
+
+            <!-- 名人名言展示区 -->
+            <div class="mb-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6 relative cursor-pointer group"
+                @click="nameForDivination = currentFamousPerson.name">
+                <div class="text-lg text-gray-700 font-medium mb-4 relative">
+                    <span class="text-3xl text-indigo-300 absolute -left-2 -top-2">"</span>
+                    <p class="pl-4" x-text="currentFamousPerson.quote"></p>
+                    <span class="text-3xl text-indigo-300 absolute -bottom-4 right-0">"</span>
+                </div>
+                <div class="flex justify-end items-center mt-4">
+                    <div class="text-right">
+                        <div class="font-medium text-indigo-600" x-text="currentFamousPerson.name"></div>
+                        <div class="text-sm text-gray-600" x-text="currentFamousPerson.title"></div>
+                    </div>
+                </div>
+                <!-- 悬浮提示 -->
+                <div class="absolute inset-0 bg-black bg-opacity-50 text-white rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                    点击使用这个名字
+                </div>
+            </div>
+
+            <!-- 输入表单部分 -->
+            <div class="space-y-4">
+                <!-- 姓名输入 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">输入姓名</label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            x-model="nameForDivination"
+                            placeholder="请输入姓名..."
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                        <!-- 快速选择名人按钮 -->
+                        <button
+                            @click="selectRandomFamousPerson()"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600"
+                            title="随机选择一位名人"
+                        >
+                            <i class="fas fa-random"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 出生年月选择 -->
+                <div class="flex space-x-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">出生年份</label>
+                        <select
+                            x-model="birthYear"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">选择年份</option>
+                            <template x-for="year in Array.from({length: 15}, (_, i) => 2005 - i)" :key="year">
+                                <option :value="year" x-text="year"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="w-1/3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">月份</label>
+                        <select
+                            x-model="birthMonth"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">选择月份</option>
+                            <template x-for="month in Array.from({length: 12}, (_, i) => i + 1)" :key="month">
+                                <option :value="month" x-text="month + '月'"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按钮组 -->
+            <div class="flex justify-end space-x-3 mt-6">
+                <button
+                    @click="showNameModal = false"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                    取消
+                </button>
+                <button
+                    @click="calculateDestiny"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                >
+                    开始测算
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 推荐结果模态框 -->
+    <div
+        x-show="showRecommendResultModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="showRecommendResultModal = false"
+    >
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <!-- 顶部标题和分享按钮区 -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold" x-text="nameForDivination ? `${nameForDivination}的命定课题` : (recommendedProjects[0]?.matchReason?.includes('阴险笑') ? '满满的恶意推荐' : (recommendedProjects[0]?.matchReason?.includes('感谢') ? '暖心推荐' : '为你推荐的课题'))"></h3>
+                <div class="flex space-x-2">
+                    <button
+                        @click="generateShareImage()"
+                        class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-1"
+                        title="保存为图片"
+                    >
+                        <i class="fas fa-image"></i>
+                        <span>保存图片</span>
+                    </button>
+                    <button
+                        @click="copyShareLink()"
+                        class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-1"
+                        title="复制分享链接"
+                    >
+                        <i class="fas fa-link"></i>
+                        <span>复制链接</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 可滚动的推荐内容区域 -->
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto mb-4">
+                <!-- 如果是命运测算，显示说明文字 -->
+                <template x-if="nameForDivination">
+                    <div class="text-center p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg mb-4">
+                        <p class="text-sm text-gray-600" x-text="`生于${birthYear}年的你，与以下课题最为契合`"></p>
+                    </div>
+                </template>
+
+                <!-- 推荐课题列表 -->
+                <template x-for="(project, index) in recommendedProjects" :key="index">
+                    <div class="border rounded-lg p-4 hover:bg-gray-50">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-lg mb-2 text-blue-600 hover:text-blue-800 cursor-pointer"
+                                    @click="goToProject(project.基本信息.课题编号)"
+                                    x-text="project.基本信息.名称">
+                                </h4>
+                                <div class="space-y-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="project.基本信息.学院名称"></span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="project.基本信息.题目类型名称"></span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" x-text="project.基本信息.题目来源名称"></span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">
+                                        <span class="font-medium">指导教师：</span>
+                                        <span x-text="project.基本信息.姓名"></span>
+                                        <span class="mx-2">|</span>
+                                        <span class="font-medium">教研室：</span>
+                                        <span x-text="project.基本信息.教研室 || '暂无'"></span>
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        <span class="font-medium">匹配原因：</span>
+                                        <span x-text="project.matchReason"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                @click="goToProject(project.基本信息.课题编号)"
+                                class="ml-4 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                            >
+                                查看详情
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 固定在底部的水印区 -->
+            <div class="border-t pt-4 flex items-center justify-between">
+                <div class="text-center text-sm text-gray-500">
+                    <p>- 来自🐔🧱毕业设计选题系统 -</p>
+                    <p class="text-xs mt-1">扫码测算你的命定课题</p>
+                </div>
+                <div id="recommendation-qrcode" class="w-20 h-20"></div>
+            </div>
+
+            <!-- 底部按钮 -->
+            <div class="flex justify-end mt-4">
+                <button
+                    @click="showRecommendResultModal = false"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用于生成图片的隐藏元素 -->
+    <div
+    x-ref="shareCanvas"
+    class="fixed -left-[9999px] top-0 bg-white"
+    style="width: 800px; visibility: hidden;"
+    >
+        <div class="p-10 pb-16 bg-white share-content">
+            <!-- 标题部分 -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl mb-2" x-text="nameForDivination ? `${nameForDivination}的命定课题` : (recommendedProjects[0]?.matchReason?.includes('阴险笑') ? '满满的恶意推荐' : '暖心推荐')"></h2>
+                <template x-if="nameForDivination">
+                    <p class="text-base text-gray-600" x-text="`生于${birthYear}年的你，与以下课题最为契合`"></p>
+                </template>
+            </div>
+
+            <!-- 推荐列表 -->
+            <div class="space-y-6" style="min-height: 400px;">
+                <template x-for="(project, index) in recommendedProjects" :key="index">
+                    <div class="border rounded-lg p-6 bg-gray-50">
+                        <div class="space-y-4">
+                            <h3 class="text-xl text-gray-900" x-text="project.基本信息.名称"></h3>
+                            <!-- 标签组 -->
+                            <div class="flex flex-wrap gap-2">
+                                <span class="tag tag-blue" x-text="project.基本信息.学院名称"></span>
+                                <span class="tag tag-green" x-text="project.基本信息.题目类型名称"></span>
+                                <span class="tag tag-purple" x-text="project.基本信息.题目来源名称"></span>
+                            </div>
+
+                            <div class="text-gray-700">
+                                <p class="mb-2">
+                                    <span class="font-medium">指导教师：</span>
+                                    <span x-text="project.基本信息.姓名"></span>
+                                    <span class="mx-2">|</span>
+                                    <span class="font-medium">教研室：</span>
+                                    <span x-text="project.基本信息.教研室 || '暂无'"></span>
+                                </p>
+                                <p>
+                                    <span class="font-medium">匹配原因：</span>
+                                    <span x-text="project.matchReason"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 底部水印和二维码 -->
+            <div class="mt-12 pt-6 border-t flex items-center justify-between">
+                <div class="text-gray-600">
+                    <p class="text-xl mb-2">🐔🧱毕业设计选题系统</p>
+                    <p class="text-sm">扫码查看你的命定课题</p>
+                </div>
+                <!-- 添加了轻微阴影 -->
+                <div x-ref="shareQrcode" class="w-32 h-32 bg-white p-2 rounded-lg shadow-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function projectsData() {
+            return {
+                projects: [], // 将通过 fetch 加载
+                searchQuery: '',
+                mobileMenuOpen: window.innerWidth >= 640, // 默认展开状态基于屏幕宽度
+                expandedProject: null,
+                highlightedProject: null,
+                filters: {
+                    college: '',
+                    type: '',
+                    source: ''
+                },
+                showRecommendModal: false,
+                showRecommendResultModal: false,
+                selectedInterests: [],
+                difficultyPreference: 'medium',
+                typePreference: 'both',
+                recommendedProjects: [],
+                interests: [
+                    '人工智能/机器学习',
+                    '计算机视觉',
+                    '自然语言处理',
+                    '网络/安全',
+                    '软件工程',
+                    '嵌入式系统',
+                    '数据库/大数据',
+                    '图形学/游戏开发'
+                ],
+                loveKeywords: {
+                    positive: ['有趣', '创新', '前沿', '热门', '实用', 'AI', '人工智能', '应用'],
+                    negative: ['复杂', '困难', '挑战']
+                },
+                hateKeywords: {
+                    positive: ['复杂', '困难', '挑战', '创新', '研究', '理论', '数学'],
+                    negative: ['简单', '基础', '实现', '应用']
+                },
+                showNameModal: false,
+                nameForDivination: '',
+                birthYear: '',
+                birthMonth: '',
+                showShareMenu: false,
+                shareUrl: '',
+                currentFamousPerson: null,
+                // 名人数据
+                famousPersons: [
+                    {
+                        name: '爱因斯坦',
+                        title: '现代物理学奠基人',
+                        quote: '想象力比知识更重要，因为知识是有限的，而想象力概括着世界的一切。'
+                    },
+                    {
+                        name: '图灵',
+                        title: '计算机科学之父',
+                        quote: '有时候正是那些看起来最不可能的事情，恰恰是最可能的。'
+                    },
+                    {
+                        name: '达芬奇',
+                        title: '文艺复兴时期全才',
+                        quote: '人类的意志力就像一个火花，可以在瞬间点燃我们内心的火焰。'
+                    },
+                    {
+                        name: '马云',
+                        title: '阿里巴巴创始人',
+                        quote: '梦想还是要有的，万一实现了呢。'
+                    },
+                    {
+                        name: '牛顿',
+                        title: '物理学家',
+                        quote: '如果说我看得比别人更远些，那是因为我站在巨人的肩膀上。'
+                    }
+                ],
+
+                get colleges() {
+                    return [...new Set(this.projects.map(p => p.基本信息.学院名称))].sort();
+                },
+                get types() {
+                    return [...new Set(this.projects.map(p => p.基本信息.题目类型名称))].sort();
+                },
+                get sources() {
+                    return [...new Set(this.projects.map(p => p.基本信息.题目来源名称))].sort();
+                },
+                get filteredProjects() {
+                    return this.projects.filter(project => {
+                        const matchesSearch = !this.searchQuery ||
+                            project.基本信息.名称.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            project.基本信息.姓名.toLowerCase().includes(this.searchQuery.toLowerCase());
+
+                        const matchesCollege = !this.filters.college ||
+                            project.基本信息.学院名称 === this.filters.college;
+
+                        const matchesType = !this.filters.type ||
+                            project.基本信息.题目类型名称 === this.filters.type;
+
+                        const matchesSource = !this.filters.source ||
+                            project.基本信息.题目来源名称 === this.filters.source;
+
+                        return matchesSearch && matchesCollege && matchesType && matchesSource;
+                    });
+                },
+
+                pickRandom() {
+                    const filteredProjects = this.filteredProjects;
+                    if (filteredProjects.length === 0) return;
+
+                    const randomIndex = Math.floor(Math.random() * filteredProjects.length);
+                    const randomProject = filteredProjects[randomIndex];
+                    const projectId = randomProject.基本信息.课题编号;
+
+                    this.expandedProject = projectId;
+                    this.highlightedProject = projectId;
+
+                    setTimeout(() => {
+                        const element = document.getElementById(`project-${projectId}`);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 100);
+
+                    setTimeout(() => {
+                        this.highlightedProject = null;
+                    }, 2000);
+                },
+
+                toggleDetails(projectId) {
+                    this.expandedProject = this.expandedProject === projectId ? null : projectId;
+                },
+
+                // "帮我选"功能
+                getRecommendations() {
+                    const recommendations = this.projects
+                        .map(project => {
+                            const score = this.calculateProjectScore(project);
+                            return { ...project, score, matchReason: this.generateMatchReason(project) };
+                        })
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 5);
+
+                    this.recommendedProjects = recommendations;
+                    this.showRecommendModal = false;
+                    this.showResults();
+                },
+
+                // "爱Ta"推荐功能
+                loveRecommendation() {
+                    const recommendations = this.projects
+                        .map(project => {
+                            const score = this.calculateLoveScore(project);
+                            return { ...project, score, matchReason: this.generateLoveReason(project) };
+                        })
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 3);
+
+                    this.recommendedProjects = recommendations;
+                    this.showResults();
+                },
+
+                // "恨Ta"推荐功能
+                hateRecommendation() {
+                    const recommendations = this.projects
+                        .map(project => {
+                            const score = this.calculateHateScore(project);
+                            return { ...project, score, matchReason: this.generateHateReason(project) };
+                        })
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 3);
+
+                    this.recommendedProjects = recommendations;
+                    this.showResults();
+                },
+
+                calculateLoveScore(project) {
+                    let score = 0;
+                    const title = project.基本信息.名称.toLowerCase();
+                    const description = (project.详细信息?.column002 || '').toLowerCase();
+                    const content = title + ' ' + description;
+
+                    this.loveKeywords.positive.forEach(keyword => {
+                        if (content.includes(keyword)) score += 2;
+                    });
+
+                    this.loveKeywords.negative.forEach(keyword => {
+                        if (content.includes(keyword)) score -= 1;
+                    });
+
+                    if (project.基本信息.题目类型名称.includes('工程')) score += 2;
+                    if (project.基本信息.题目来源名称.includes('企业')) score += 2;
+
+                    return score;
+                },
+
+                calculateHateScore(project) {
+                    let score = 0;
+                    const title = project.基本信息.名称.toLowerCase();
+                    const description = (project.详细信息?.column002 || '').toLowerCase();
+                    const content = title + ' ' + description;
+
+                    this.hateKeywords.positive.forEach(keyword => {
+                        if (content.includes(keyword)) score += 2;
+                    });
+
+                    this.hateKeywords.negative.forEach(keyword => {
+                        if (content.includes(keyword)) score -= 1;
+                    });
+
+                    if (project.基本信息.题目类型名称.includes('研究')) score += 3;
+                    if (content.length > 1000) score += 2;
+
+                    return score;
+                },
+                calculateProjectScore(project) {
+                    let score = 0;
+                    const title = project.基本信息.名称.toLowerCase();
+                    const description = (project.详细信息?.column002 || '').toLowerCase();
+
+                    this.selectedInterests.forEach(interest => {
+                        const interestLower = interest.toLowerCase();
+                        if (title.includes(interestLower) || description.includes(interestLower)) {
+                            score += 3;
+                        }
+                    });
+
+                    if (this.typePreference === 'research' && project.基本信息.题目类型名称.includes('研究')) {
+                        score += 2;
+                    } else if (this.typePreference === 'engineering' && project.基本信息.题目类型名称.includes('工程')) {
+                        score += 2;
+                    } else if (this.typePreference === 'both') {
+                        score += 1;
+                    }
+
+                    const hardKeywords = ['研究', '创新', '突破', '挑战'];
+                    const easyKeywords = ['实现', '应用', '设计'];
+
+                    if (this.difficultyPreference === 'hard') {
+                        score += hardKeywords.filter(word => title.includes(word) || description.includes(word)).length;
+                    } else if (this.difficultyPreference === 'easy') {
+                        score += easyKeywords.filter(word => title.includes(word) || description.includes(word)).length;
+                    }
+
+                    return score;
+                },
+
+                generateMatchReason(project) {
+                    const reasons = [];
+
+                    const matchedInterests = this.selectedInterests.filter(interest => {
+                        const interestLower = interest.toLowerCase();
+                        return project.基本信息.名称.toLowerCase().includes(interestLower) ||
+                               (project.详细信息?.column002 || '').toLowerCase().includes(interestLower);
+                    });
+
+                    if (matchedInterests.length > 0) {
+                        reasons.push(`匹配你感兴趣的${matchedInterests.join('、')}方向`);
+                    }
+
+                    if (this.typePreference === 'research' && project.基本信息.题目类型名称.includes('研究')) {
+                        reasons.push('符合你对研究型项目的偏好');
+                    } else if (this.typePreference === 'engineering' && project.基本信息.题目类型名称.includes('工程')) {
+                        reasons.push('符合你对工程实现类项目的偏好');
+                    }
+
+                    if (reasons.length === 0) {
+                        reasons.push('综合考虑你的偏好推荐');
+                    }
+
+                    return reasons.join('；');
+                },
+
+                // 在 projectsData() 返回的对象中添加 goToProject 方法
+                goToProject(projectId) {
+                    this.expandedProject = projectId;
+                    this.highlightedProject = projectId;
+                    this.showRecommendResultModal = false;
+
+                    setTimeout(() => {
+                        const element = document.getElementById(`project-${projectId}`);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 100);
+
+                    setTimeout(() => {
+                        this.highlightedProject = null;
+                    }, 2000);
+                },
+
+                // 改进 generateLoveReason 方法
+                generateLoveReason(project) {
+                    const reasons = new Set(); // 使用 Set 避免重复
+                    const title = project.基本信息.名称.toLowerCase();
+                    const description = (project.详细信息?.column002 || '').toLowerCase();
+                    const content = title + ' ' + description;
+
+                    // 检查项目特点
+                    const features = new Set();
+                    this.loveKeywords.positive.forEach(keyword => {
+                        if (content.includes(keyword)) {
+                            features.add(keyword);
+                        }
+                    });
+
+                    if (features.size > 0) {
+                        reasons.add(`项目主题与${Array.from(features).slice(0, 3).join('、')}相关`);
+                    }
+
+                    // 检查项目类型
+                    if (project.基本信息.题目类型名称.includes('工程')) {
+                        reasons.add('注重实践应用，有助于积累实战经验');
+                    } else if (project.基本信息.题目类型名称.includes('研究')) {
+                        reasons.add('包含创新性研究，可以培养科研能力');
+                    }
+
+                    // 检查项目来源
+                    if (project.基本信息.题目来源名称.includes('企业')) {
+                        reasons.add('来自企业实际需求，对就业有帮助');
+                    } else if (project.基本信息.题目来源名称.includes('科研')) {
+                        reasons.add('源自科研项目，可以接触前沿技术');
+                    }
+
+                    // 检查难度水平
+                    const complexityWords = content.match(/基于|设计|实现|研究/g) || [];
+                    if (complexityWords.length <= 3) {
+                        reasons.add('整体难度适中，能够胜任');
+                    }
+
+                    return Array.from(reasons).slice(0, 3).join('；') + '。Ta一定会感谢你的！';
+                },
+
+                // 改进 generateHateReason 方法
+                generateHateReason(project) {
+                    const reasons = new Set();
+                    const title = project.基本信息.名称.toLowerCase();
+                    const description = (project.详细信息?.column002 || '').toLowerCase();
+                    const content = title + ' ' + description;
+
+                    // 检查复杂性
+                    const complexKeywords = ['深度', '理论', '创新', '优化', '研究'];
+                    const foundComplex = complexKeywords.filter(word => content.includes(word));
+                    if (foundComplex.length > 0) {
+                        reasons.add(`需要深入理解${foundComplex.slice(0, 2).join('、')}等复杂概念`);
+                    }
+
+                    // 检查工作量
+                    if (content.length > 1000) {
+                        reasons.add('项目内容特别丰富，需要投入大量时间');
+                    }
+
+                    // 检查技术要求
+                    const techKeywords = ['算法', '模型', '框架', '系统'];
+                    const foundTech = techKeywords.filter(word => content.includes(word));
+                    if (foundTech.length > 0) {
+                        reasons.add(`需要掌握多个${foundTech.slice(0, 2).join('、')}相关技术`);
+                    }
+
+                    // 检查项目类型
+                    if (project.基本信息.题目类型名称.includes('研究')) {
+                        reasons.add('理论性较强，需要大量文献调研');
+                    }
+
+                    // 如果原因太少，添加一个通用的
+                    if (reasons.size < 2) {
+                        reasons.add('整体难度较大，需要付出很多努力');
+                    }
+
+                    return Array.from(reasons).slice(0, 3).join('；') + '。嘿嘿嘿(阴险笑)';
+                },
+
+                // 基于姓名和生日计算"命中注定"的课题
+                async calculateDestiny(fromShare = false) {
+                    if (!fromShare) {
+                        const newUrl = this.generateShareUrl();
+                        window.history.pushState({ path: newUrl }, '', newUrl);
+                    }
+
+                    const name = this.nameForDivination;
+                    const year = parseInt(this.birthYear);
+                    const month = parseInt(this.birthMonth);
+
+                    if (!name || !year || !month) {
+                        this.$dispatch('show-toast', {
+                            message: '请输入完整信息',
+                            type: 'warning'
+                        });
+                        return;
+                    }
+
+                    // 使用姓名、年份和月份生成更复杂的伪随机数
+                    const nameSum = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+                    const dateSum = year * 12 + month;
+                    const seed = (nameSum * dateSum) % 100000;
+
+                    // 扩展性格类型和关键词
+                    const personalities = {
+                        research: {
+                            keywords: ['钻研', '创新', '理论', '分析', '研究', '算法', '模型', '前沿'],
+                            traits: ['善于思考', '追求真理', '专注钻研', '崇尚创新'],
+                            suitable: ['理论研究', '算法设计', '模型构建', '创新探索'],
+                            monthAffinity: [1, 2, 7, 8] // 适合研究的月份
+                        },
+                        engineering: {
+                            keywords: ['实践', '动手', '应用', '开发', '工程', '系统', '部署', '实现'],
+                            traits: ['实干精神', '技术驱动', '工程思维', '解决问题'],
+                            suitable: ['系统开发', '工程实践', '技术攻关', '方案落地'],
+                            monthAffinity: [3, 4, 9, 10] // 适合工程的月份
+                        },
+                        management: {
+                            keywords: ['管理', '规划', '设计', '优化', '流程', '架构', '团队', '效率'],
+                            traits: ['统筹规划', '系统思维', '注重效率', '善于管理'],
+                            suitable: ['架构设计', '流程优化', '团队协作', '项目管理'],
+                            monthAffinity: [5, 6, 11, 12] // 适合管理的月份
+                        },
+                        creative: {
+                            keywords: ['创意', '交互', '用户', '体验', '设计', '创新', '界面', '场景'],
+                            traits: ['创意十足', '重视体验', '关注细节', '追求完美'],
+                            suitable: ['交互设计', '用户体验', '创新应用', '场景构建'],
+                            monthAffinity: [2, 4, 8, 10] // 适合创意的月份
+                        }
+                    };
+
+                    // 使用更复杂的逻辑选择性格倾向，加入月份影响
+                    const personalityFactors = [
+                        nameSum % 4,          // 姓名因素 (25%)
+                        year % 4,            // 出生年份因素 (25%)
+                        month % 4,           // 出生月份因素 (25%)
+                        seed % 4             // 随机因素 (25%)
+                    ];
+
+                    // 计算各个性格类型的得分
+                    const typeScores = Object.entries(personalities).map(([type, info]) => {
+                        let score = personalityFactors.reduce((a, b) => a + b, 0);
+
+                        // 月份亲和度加成
+                        if (info.monthAffinity.includes(month)) {
+                            score += 2;
+                        }
+
+                        // 年份特征加成（例如：某些年份更适合某些类型）
+                        const yearLastDigit = year % 10;
+                        if (yearLastDigit % 3 === 0 && type === 'research') score += 1;
+                        if (yearLastDigit % 3 === 1 && type === 'engineering') score += 1;
+                        if (yearLastDigit % 3 === 2 && type === 'creative') score += 1;
+
+                        return { type, score };
+                    });
+
+                    // 选择得分最高的性格类型
+                    const personalityType = typeScores.sort((a, b) => b.score - a.score)[0].type;
+
+                    // 获取该性格类型的所有特征
+                    const personalityInfo = personalities[personalityType];
+                    const keywords = personalityInfo.keywords;
+                    const traits = personalityInfo.traits;
+                    const suitableAreas = personalityInfo.suitable;
+
+                    // 筛选匹配的项目
+                    const recommendations = this.projects
+                        .map(project => {
+                            // 计算更复杂的匹配分数
+                            const score = this.calculateDestinyScore(project, {
+                                keywords,
+                                traits,
+                                suitableAreas,
+                                seed,
+                                name,
+                                year,
+                                month
+                            });
+
+                            // 生成匹配原因
+                            const matchReason = this.generateDestinyReason(
+                                project,
+                                name,
+                                keywords,
+                                personalityType,
+                                {
+                                    traits: this.randomPick(traits),
+                                    suitable: this.randomPick(suitableAreas),
+                                    month: month
+                                }
+                            );
+
+                            return {
+                                ...project,
+                                score,
+                                matchReason,
+                                personalityType
+                            };
+                        })
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 3);
+
+                    // 确保推荐理由不重复
+                    const usedPhrases = new Set();
+                    recommendations.forEach(project => {
+                        let attempts = 0;
+                        let reason = project.matchReason;
+                        while (usedPhrases.has(reason) && attempts < 5) {
+                            reason = this.generateDestinyReason(
+                                project,
+                                name,
+                                keywords,
+                                personalityType,
+                                {
+                                    traits: this.randomPick(traits),
+                                    suitable: this.randomPick(suitableAreas),
+                                    month: month
+                                }
+                            );
+                            attempts++;
+                        }
+                        usedPhrases.add(reason);
+                        project.matchReason = reason;
+                    });
+
+                    this.recommendedProjects = recommendations;
+                    this.showNameModal = false;
+                    this.showResults();
+                },
+
+                calculateDestinyScore(project, info) {
+                    const { keywords, traits, suitableAreas, seed, name, year } = info;
+                    let score = 0;
+
+                    // 基础分数：关键词匹配
+                    const content = (project.基本信息.名称 + ' ' + (project.详细信息?.column002 || '')).toLowerCase();
+                    keywords.forEach(keyword => {
+                        if (content.includes(keyword)) score += 2;
+                    });
+
+                    // 项目类型匹配
+                    suitableAreas.forEach(area => {
+                        if (content.includes(area)) score += 3;
+                    });
+
+                    // 导师匹配度（基于姓名）
+                    const teacherNameSum = Array.from(project.基本信息.姓名).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+                    const teacherCompatibility = (teacherNameSum + seed) % 10;
+                    score += teacherCompatibility;
+
+                    // 项目难度适配（基于出生年）
+                    const difficulty = (project.基本信息.课题编号 + year) % 5;
+                    score += 5 - Math.abs(difficulty - 2);
+
+                    // 添加一些随机性，但保持相对稳定
+                    const randomFactor = (seed * project.基本信息.课题编号) % 5;
+                    score += randomFactor;
+
+                    return score;
+                },
+
+                // 辅助方法
+                randomPick(array) {
+                    return array[Math.floor(Math.random() * array.length)];
+                },
+
+                weightedRandomPicks(itemsWithWeights, count) {
+                    const selected = new Set();
+                    const result = [];
+
+                    while (result.length < count && selected.size < itemsWithWeights.length) {
+                        for (const [item, weight] of itemsWithWeights) {
+                            if (selected.has(item)) continue;
+                            if (Math.random() < weight) {
+                                result.push(item);
+                                selected.add(item);
+                                if (result.length >= count) break;
+                            }
+                        }
+                    }
+
+                    return result;
+                },
+
+                getZodiacSign(year) {
+                    const signs = ['水瓶', '双鱼', '白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯'];
+                    return signs[year % 12];
+                },
+
+                getChineseZodiac(year) {
+                    const animals = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+                    return animals[(year - 1900) % 12];
+                },
+
+                getElementalNature(year) {
+                    const elements = ['金', '木', '水', '火', '土'];
+                    return elements[year % 5];
+                },
+
+                getLuckyNumber(name) {
+                    return (Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 9) + 1;
+                },
+
+                getPersonalityDesc(type) {
+                    const descriptions = {
+                        research: [
+                            '擅长深入思考的你',
+                            '善于探索真理的你',
+                            '追求真知的你',
+                            '理论功底深厚的你'
+                        ],
+                        engineering: [
+                            '动手能力强的你',
+                            '实践天赋出众的你',
+                            '技术驱动的你',
+                            '工程思维深厚的你'
+                        ],
+                        management: [
+                            '条理分明的你',
+                            '管理才能出众的你',
+                            '领导力超群的你',
+                            '善于统筹的你'
+                        ],
+                        creative: [
+                            '富有创意的你',
+                            '想象力丰富的你',
+                            '创新能力突出的你',
+                            '艺术天赋异禀的你'
+                        ]
+                    };
+
+                    return this.randomPick(descriptions[type] || descriptions.creative);
+                },
+
+                generateDestinyReason(project, name, keywords, personalityType) {
+                    const reasons = [];
+
+                    // 开场白随机选择器
+                    const openings = [
+                        `${name}，${this.getPersonalityDesc(personalityType)}`,
+                        `${name}，作为${this.getZodiacSign(this.birthYear)}座的你`,
+                        `${name}，属${this.getChineseZodiac(this.birthYear)}的你`,
+                        `${name}，${this.getElementalNature(this.birthYear)}命格的你`,
+                        `${name}，天生带着${this.getLuckyNumber(name)}号幸运光环的你`
+                    ];
+                    reasons.push(this.randomPick(openings));
+
+                    // 契合点描述
+                    const matchPoints = [
+                        [`与这个项目的${this.randomPick(['天时', '地利', '人和'])}完美契合`, 0.3],
+                        [`与${project.基本信息.姓名}导师${this.randomPick(['有缘', '默契十足', '理念相投'])}`, 0.3],
+                        [`在${project.基本信息.学院名称}领域${this.randomPick(['大放异彩', '独具慧眼', '展现才华'])}`, 0.3],
+                        [`${this.randomPick(['命理', '星象', '五行'])}暗示这将是个${this.randomPick(['理想', '完美', '绝妙'])}的选择`, 0.2],
+                        [`选在${this.randomPick(['新月', '满月', '春分', '秋分'])}时节更是锦上添花`, 0.2],
+                    ];
+
+                    reasons.push(...this.weightedRandomPicks(matchPoints, 2));
+
+                    // 关键词匹配改进版
+                    const keywordMatches = keywords.filter(keyword =>
+                        project.基本信息.名称.includes(keyword) ||
+                        (project.详细信息?.column002 || '').includes(keyword)
+                    );
+
+                    if (keywordMatches.length > 0) {
+                        const keywordPhrases = [
+                            `在${keywordMatches.slice(0, 2).join('、')}方面很对你的胃口`,
+                            `对${keywordMatches.slice(0, 2).join('和')}有着独特的见解`,
+                            `能充分发挥你在${keywordMatches.slice(0, 2).join('、')}上的天赋`
+                        ];
+                        reasons.push(this.randomPick(keywordPhrases));
+                    }
+
+                    // 结语随机选择器
+                    const endings = [
+                        '这就是命中注定的选择！',
+                        '冥冥之中自有天意！',
+                        '仿佛是上天的安排！',
+                        '简直是天作之合！',
+                        '绝对不会错的选择！'
+                    ];
+
+                    return reasons.join('，') + '。' + this.randomPick(endings);
+                },
+
+                // 选择一个随机名人
+                selectRandomFamousPerson() {
+                    const randomIndex = Math.floor(Math.random() * this.famousPersons.length);
+                    this.currentFamousPerson = this.famousPersons[randomIndex];
+                    this.nameForDivination = this.currentFamousPerson.name;
+                },
+
+                // 打开姓名测算模态框
+                openNameModal() {
+                    this.showNameModal = true;
+                    this.selectRandomFamousPerson();
+                    // 设置默认年月
+                    const currentYear = new Date().getFullYear();
+                    this.birthYear = currentYear - 20;
+                    this.birthMonth = new Date().getMonth() + 1;
+                },
+
+                // 生成二维码
+                generateQRCode(elementId, size = 80) {
+                    const container = document.getElementById(elementId);
+                    if (container) {
+                        container.innerHTML = ''; // 清除旧的二维码
+                        new QRCode(container, {
+                            text: this.generateShareUrl(),
+                            width: size,
+                            height: size,
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    }
+                },
+
+                // 生成分享图片
+                async generateShareImage() {
+                    try {
+                        this.$dispatch('show-toast', {
+                            message: '正在生成图片，请稍候...',
+                            type: 'info'
+                        });
+
+                        // 确保字体已加载
+                        await document.fonts.load('1rem "Huiwen-mincho"');
+
+                        // 生成二维码
+                        const qrcodeElement = this.$refs.shareQrcode;
+                        qrcodeElement.innerHTML = '';
+                        new QRCode(qrcodeElement, {
+                            text: this.generateShareUrl(),
+                            width: 128,
+                            height: 128,
+                            correctLevel: QRCode.CorrectLevel.H,
+                            margin: 2
+                        });
+
+                        // 等待二维码渲染
+                        await new Promise(resolve => setTimeout(resolve, 100));
+
+                        // 准备画布元素
+                        const canvasElement = this.$refs.shareCanvas;
+                        canvasElement.style.visibility = 'visible';
+
+                        try {
+                            // 生成图片
+                            const canvas = await html2canvas(canvasElement, {
+                                scale: 2,
+                                logging: false,
+                                useCORS: true,
+                                backgroundColor: '#ffffff',
+                                width: 800,
+                                height: canvasElement.offsetHeight,
+                                onclone: (document) => {
+                                    const clonedElement = document.querySelector('.share-content');
+                                    if (clonedElement) {
+                                        clonedElement.style.fontFamily = '"Huiwen-mincho", serif';
+                                    }
+                                }
+                            });
+
+                            const imgData = canvas.toDataURL('image/png');
+                            const link = document.createElement('a');
+                            link.download = `${this.nameForDivination || '课题推荐'}_${new Date().getTime()}.png`;
+                            link.href = imgData;
+                            link.click();
+
+                        } finally {
+                            canvasElement.style.visibility = 'hidden';
+                            this.$dispatch('show-toast', {
+                                message: '图片已生成！',
+                                type: 'success'
+                            });
+                        }
+
+                    } catch (error) {
+                        console.error('生成图片失败:', error);
+                        this.$dispatch('show-toast', {
+                            message: '生成图片失败，请重试',
+                            type: 'error'
+                        });
+                    }
+                },
+
+                // 生成分享链接时确保必要信息存在
+                generateShareUrl() {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const params = new URLSearchParams();
+
+                    // 只有在有姓名测算结果时才添加相关参数
+                    if (this.nameForDivination) {
+                        params.append('name', this.nameForDivination);
+                        params.append('year', this.birthYear);
+                        params.append('month', this.birthMonth);
+                    }
+
+                    // 始终添加推荐结果和类型
+                    params.append('recommendations', JSON.stringify(this.recommendedProjects.map(p => p.基本信息.课题编号)));
+                    params.append('type', this.nameForDivination ? 'destiny' : 'normal');
+
+                    return `${baseUrl}?${params.toString()}`;
+                },
+
+                // 复制分享链接
+                async copyShareLink() {
+                    const shareUrl = this.generateShareUrl();
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        this.$dispatch('show-toast', {
+                            message: '链接已复制到剪贴板！',
+                            type: 'success'
+                        });
+                    } catch (error) {
+                        console.error('复制失败:', error);
+                        // 降级方案
+                        const textarea = document.createElement('textarea');
+                        textarea.value = shareUrl;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        this.$dispatch('show-toast', {
+                            message: '链接已复制到剪贴板！',
+                            type: 'success'
+                        });
+                    }
+                },
+
+                // 初始化时生成展示用的二维码
+                showResults() {
+                    this.showRecommendResultModal = true;
+                    this.$nextTick(() => {
+                        this.generateQRCode('recommendation-qrcode');
+                    });
+                },
+
+                // 社交分享
+                shareToWeChat() {
+                    // 显示二维码弹窗
+                    alert('请打开微信扫描二维码进行分享');
+                    this.showShareMenu = false;
+                },
+
+                shareToWeibo() {
+                    const shareUrl = this.generateShareUrl();
+                    const title = this.nameForDivination
+                        ? `${this.nameForDivination}的命定毕设课题已选出！`
+                        : '快来测算你的命定毕设课题！';
+                    const url = `http://service.weibo.com/share/share.php?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
+                    window.open(url, '_blank');
+                    this.showShareMenu = false;
+                },
+
+                shareToQQ() {
+                    const shareUrl = this.generateShareUrl();
+                    const title = this.nameForDivination
+                        ? `${this.nameForDivination}的命定毕设课题已选出！`
+                        : '快来测算你的命定毕设课题！';
+                    const url = `http://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
+                    window.open(url, '_blank');
+                    this.showShareMenu = false;
+                },
+
+                // 获取推荐标题
+                getRecommendTitle() {
+                    if (this.nameForDivination) {
+                        return `${this.nameForDivination}的命定课题`;
+                    }
+                    return this.recommendedProjects[0]?.matchReason?.includes('阴险笑')
+                        ? '满满的恶意推荐'
+                        : (this.recommendedProjects[0]?.matchReason?.includes('感谢') ? '暖心推荐' : '为你推荐的课题');
+                },
+
+                // 处理URL参数，在初始化时调用
+                async handleUrlParams() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has('recommendations')) {
+                        try {
+                            const type = params.get('type');
+                            const recommendedIds = JSON.parse(params.get('recommendations'));
+
+                            // 处理分享链接
+                            if (type === 'destiny' && params.has('name') && params.has('year') && params.has('month')) {
+                                this.nameForDivination = params.get('name');
+                                this.birthYear = params.get('year');
+                                this.birthMonth = params.get('month');
+                                await this.calculateDestiny(true);
+                            } else {
+                                const recommendations = recommendedIds
+                                    .map(id => this.projects.find(p => p.基本信息.课题编号 === id))
+                                    .filter(Boolean);
+                                if (recommendations.length > 0) {
+                                    this.recommendedProjects = recommendations;
+                                    this.showResults();
+                                }
+                            }
+
+                            // 清除 URL 参数，但不刷新页面
+                            window.history.replaceState({}, '', window.location.pathname);
+                        } catch (error) {
+                            console.error('处理分享参数失败:', error);
+                            this.$dispatch('show-toast', {
+                                message: '处理分享参数失败',
+                                type: 'error'
+                            });
+                        }
+                    }
+                },
+                // 初始化方法
+                async init() {
+                    try {
+                        const response = await fetch('projects_data.json');
+                        const data = await response.json();
+                        this.projects = data;
+
+                        // 添加屏幕宽度监听
+                        window.addEventListener('resize', () => {
+                            if (window.innerWidth >= 640) {
+                                this.mobileMenuOpen = true;
+                            }
+                        });
+
+                        // 初始化移动端菜单状态
+                        this.mobileMenuOpen = window.innerWidth >= 640;
+
+                        // 处理 URL 参数
+                        await this.handleUrlParams();
+
+                    } catch (error) {
+                        console.error('初始化失败:', error);
+                        this.$dispatch('show-toast', {
+                            message: '数据加载失败，请刷新页面重试',
+                            type: 'error'
+                        });
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

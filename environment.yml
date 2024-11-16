@@ -1,0 +1,10 @@
+name: jlu_topic_crawl
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - brotli
+  - fonttools
+  - requests
+  - lxml
+
