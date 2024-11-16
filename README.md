@@ -19,6 +19,7 @@
 ├── crawl.py          # Python 爬虫脚本，负责获取选题信息
 ├── index.html        # 简洁的前端页面，展示爬取的选题信息
 ├── setup.py         # 安装字体
+├── font_subset.py  # 字体裁剪
 ├── README.md         # 项目说明文件
 
 ```
