@@ -4,6 +4,10 @@
 
 该项目旨在提供一个简洁易用的毕业论文选题信息获取和展示平台。由于某网提供的选题系统界面复杂、不够直观，本系统使用 Python 爬虫从知网论文选题页面爬取选题信息，并通过一个简洁的前端界面进行展示。
 
+## 项目展示
+
+[Screencast from 2024-11-16 16-10-16.webm](https://github.com/user-attachments/assets/e2551466-2c5b-4d42-8229-9542c2060550)
+
 ## 功能概述
 
 - **数据爬取**：使用 Python 编写的爬虫程序，自动获取论文选题信息。
@@ -30,12 +34,9 @@
 
 首先，确保你的系统上已安装 Conda。
 
-
-
 ```shell
-mkdir jlu_crawl # 新建文件夹存放源码
-cd jlu_crawl  # 进入新建文件夹
 git clone https://github.com/Parsnip113/ThesisTopicSelection.git # 下载源码
+cd ThesisTopicSelection
 
 
 conda env create -f environment.yml # 安装依赖
@@ -45,7 +46,7 @@ conda activate jlu_topic_crawl # 启用环境
 ### 2. 创建并配置 `config.json`
 
 ```shell
-# 在上一步创建的文件夹下创建config.json
+# 在源码文件夹下创建config.json
 vim config.json
 ```
 
