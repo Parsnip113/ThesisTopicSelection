@@ -85,7 +85,7 @@ python crawl.py # 运行爬虫获取选题信息
 
 本项目提供了一个简洁直观的展示界面，帮助用户快速浏览并选择合适的论文选题。
 
-![image-20241116155430725](/home/cyrus/.config/Typora/typora-user-images/image-20241116155430725.png)
+![Screenshot from 2024-11-16 15-54-26](https://github.com/user-attachments/assets/ee1b184a-e5ba-43c6-8c6f-2142372fb689)
 
 ## 贡献
 
