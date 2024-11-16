@@ -6,7 +6,7 @@
 
 ## 项目展示
 
-[Screencast from 2024-11-16 16-10-16.webm](https://github.com/user-attachments/assets/e2551466-2c5b-4d42-8229-9542c2060550)
+[Screencast from 2024-11-16 16-22-38.webm](https://github.com/user-attachments/assets/632b4287-0a90-48e9-b6b2-cf248d7edb5f)
 
 ## 功能概述
 
@@ -18,7 +18,7 @@
 
 ```
 .
- // ├── config.json       # 存放爬虫所需的环境变量，如 cookie 和 authtoken 等，需要自己创建
+├── config.json       # 存放爬虫所需的环境变量，如 cookie 和 authtoken 等
 ├── environment.yml        # conda依赖说明文件
 ├── crawl.py          # Python 爬虫脚本，负责获取选题信息
 ├── index.html        # 简洁的前端页面，展示爬取的选题信息
@@ -43,24 +43,19 @@ conda env create -f environment.yml # 安装依赖
 conda activate jlu_topic_crawl # 启用环境
 ```
 
-### 2. 创建并配置 `config.json`
-
-```shell
-# 在源码文件夹下创建config.json
-vim config.json
-```
+### 2. 配置 `config.json`
 
 `config.json` 文件包含爬虫运行所需的环境变量（如 Cookie、AuthToken 等），请确保正确配置此文件。文件示例：
 
 ```json
 {
-  "COOKIE": "your_cookie_here",
-  "AUTH_TOKEN": "your_auth_token_here",
-  "USER_AGENT": "your_user_agent_here"
+  "COOKIE": "sadadsadaxxxxx",
+  "AUTH_TOKEN": "6B6sd8dxxasxsxxxxx",
+  "USER_AGENT": "xxxxxxx"
 }
 ```
 
-确保将文件中的 `your_cookie_here` ，`your_user_agent_here`和 `your_auth_token_here` 替换为你从某网获取的有效信息。
+确保将示例中的 `"sadadsadaxxxxx"`,`"6B6sd8dxxasxsxxxxx"`和`"xxxxxxx"`替换为你从某网获取的有效信息。
 
 ### 3. 运行爬虫
 
@@ -75,18 +70,16 @@ python crawl.py # 运行爬虫获取选题信息
 
 ### 4. 查看前端展示页面
 
+```shell
+python -m http.server # 开启http服务器
+```
+
 在浏览器中打开 `index.html` 文件，可以查看爬取的选题信息展示页面。
 
 ## 使用说明
 
 1. **数据更新**：每次运行爬虫脚本，都会自动获取最新的选题信息并更新本地存储的数据。
 2. **前端展示**：通过打开 `index.html` 文件，可以查看到一个简单的选题信息展示页面，展示了爬取的选题列表，便于用户快速浏览。
-
-## 项目示意图
-
-本项目提供了一个简洁直观的展示界面，帮助用户快速浏览并选择合适的论文选题。
-
-![Screenshot from 2024-11-16 15-54-26](https://github.com/user-attachments/assets/ee1b184a-e5ba-43c6-8c6f-2142372fb689)
 
 ## 贡献
 
