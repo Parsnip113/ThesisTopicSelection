@@ -9,5 +9,6 @@
 !index.html
 !environment.yml
 !font_subset.py
+!setup.py
 !README.md
 !README_zh-CN.md

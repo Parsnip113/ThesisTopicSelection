@@ -1,52 +1,54 @@
-# Thesis Topic Selection System
+# **🐔🧱**论文选题系统
 
-## Project Overview
+## 项目简介
 
-This project aims to provide a simple and user-friendly platform for obtaining and displaying graduation thesis topic information. Due to the complexity and lack of intuitiveness of the thesis topic selection system provided by a certain website, this system uses a Python web scraper to collect thesis topic information from the website and presents it through a clean and simple front-end interface.
+该项目旨在提供一个简洁易用的毕业论文选题信息获取和展示平台。由于某网提供的选题系统界面复杂、不够直观，本系统使用 Python 爬虫从知网论文选题页面爬取选题信息，并通过一个简洁的前端界面进行展示。
 
-## Features
+## 功能概述
 
-- **Data Crawling**: A Python-based web scraper that automatically retrieves thesis topic information.
-- **Frontend Display**: A simple and intuitive HTML page that displays the scraped thesis topic data.
-- **Configuration Management**: The system uses a `config.json` file to store environment variables required by the scraper (such as cookies and auth tokens), ensuring that the scraper runs smoothly.
+- **数据爬取**：使用 Python 编写的爬虫程序，自动获取论文选题信息。
+- **前端展示**：提供简洁直观的 HTML 页面，用于展示爬取的选题信息。
+- **配置管理**：通过配置文件（`config.json`）管理爬虫所需的环境变量（如 Cookie 和 AuthToken 等），保证爬虫能够正常运行。
 
-## Project Structure
+## 项目结构
 
 ```
 .
-├── config.json       # Stores environment variables for the scraper, such as cookie and auth token
-├── crawl.py          # Python script that crawls thesis topic information from the website
-├── index.html        # Simple front-end page to display the scraped thesis topic data
-├── README.md         # Project description file
+ // ├── config.json       # 存放爬虫所需的环境变量，如 cookie 和 authtoken 等，需要自己创建
+├── environment.yml        # conda依赖说明文件
+├── crawl.py          # Python 爬虫脚本，负责获取选题信息
+├── index.html        # 简洁的前端页面，展示爬取的选题信息
+├── setup.py         # 安装字体
+├── README.md         # 项目说明文件
+
 ```
 
-## Installation and Configuration
+## 安装和配置
 
-### 1. Install Dependencies
+### 1. 创建环境
 
-First, ensure that you have Conda installed on your system.
+首先，确保你的系统上已安装 Conda。
 
-Navigate to the location where the source code is downloaded:
+
 
 ```shell
-cd .../where_source_download/
+mkdir jlu_crawl # 新建文件夹存放源码
+cd jlu_crawl  # 进入新建文件夹
+git clone https://github.com/Parsnip113/ThesisTopicSelection.git # 下载源码
+
+
+conda env create -f environment.yml # 安装依赖
+conda activate jlu_topic_crawl # 启用环境
 ```
 
-Create a new Python environment:
+### 2. 创建并配置 `config.json`
 
 ```shell
-conda create -n myEnv python
+# 在上一步创建的文件夹下创建config.json
+vim config.json
 ```
 
-Install the necessary Python packages:
-
-```shell
-conda install requests
-```
-
-### 2. Configure `config.json`
-
-The `config.json` file contains environment variables required for the scraper to run (such as cookies, auth tokens, and user agents). Ensure that this file is correctly configured. Example:
+`config.json` 文件包含爬虫运行所需的环境变量（如 Cookie、AuthToken 等），请确保正确配置此文件。文件示例：
 
 ```json
 {
@@ -56,59 +58,46 @@ The `config.json` file contains environment variables required for the scraper t
 }
 ```
 
-Replace `your_cookie_here`, `your_user_agent_here`, and `your_auth_token_here` with the valid information obtained from the website.
+确保将文件中的 `your_cookie_here` ，`your_user_agent_here`和 `your_auth_token_here` 替换为你从某网获取的有效信息。
 
-### 3. Run the Scraper
+### 3. 运行爬虫
 
-After configuring the environment variables, run the scraper script to collect thesis topic data:
+在配置好环境变量之后，运行爬虫脚本来抓取选题数据：
 
 ```bash
-python crawl.py
+python setup.py # 安装必要字体
+python crawl.py # 运行爬虫获取选题信息
 ```
 
-Once the scraper has successfully run, the thesis topic information will be stored in a local JSON file. You can view the data via the `index.html` page.
+爬虫运行成功后，选题信息将被存储在一个本地 JSON 文件中，可以通过 `index.html` 页面查看。
 
-### 4. View Frontend Display Page
+### 4. 查看前端展示页面
 
-Open the `index.html` file in a browser to view the displayed thesis topic information.
+在浏览器中打开 `index.html` 文件，可以查看爬取的选题信息展示页面。
 
-## Usage Instructions
+## 使用说明
 
-1. **Data Updates**: Every time the scraper script is run, it will automatically fetch the latest thesis topic data and update the local storage.
-2. **Frontend Display**: By opening the `index.html` file, you can view a simple display of the thesis topics, making it easy to browse and choose the desired topic.
+1. **数据更新**：每次运行爬虫脚本，都会自动获取最新的选题信息并更新本地存储的数据。
+2. **前端展示**：通过打开 `index.html` 文件，可以查看到一个简单的选题信息展示页面，展示了爬取的选题列表，便于用户快速浏览。
 
-## Project Mockups
+## 项目示意图
 
-### Original Thesis Topic Page
+本项目提供了一个简洁直观的展示界面，帮助用户快速浏览并选择合适的论文选题。
 
-- The original website's thesis topic page is quite complex, making it difficult to quickly find the desired topic information.
+![image-20241116155430725](/home/cyrus/.config/Typora/typora-user-images/image-20241116155430725.png)
 
-### Frontend Display Page (This Project)
+## 贡献
 
-- This project provides a clean and intuitive display interface that helps users quickly browse and select a suitable thesis topic.
+欢迎对本项目提出建议或贡献代码。你可以通过以下方式参与：
 
-## Contributions
-
-We welcome suggestions or contributions to this project. You can participate in the following ways:
-
-1. Fork the repository and submit a Pull Request.
-2. Submit an Issue to report bugs or propose new features.
-
-## Acknowledgments
-
-Thanks to the website for providing thesis topic data, and thanks to the open-source community for the tools and support provided for this project.
+1. Fork 该项目并提交 Pull Request。
+2. 提交 Issue，报告 Bug 或提出新功能需求。
 
 ---
 
-### Project Display Mockups
+## 其他说明
 
-Here, you can provide screenshots or mockups to help users better understand how the project works.
+### 爬虫相关法律声明
 
----
-
-## Additional Notes
-
-### Web Scraping Legal Disclaimer
-
-This project is intended solely for educational and research purposes. Please comply with relevant laws and intellectual property regulations. Unauthorized use of the scraper in production environments or for commercial purposes is prohibited.
+本项目仅限于学习和研究用途，请遵守相关法律法规和知识产权保护条款。未经授权，请勿将爬虫应用于生产环境或商业目的。
 
